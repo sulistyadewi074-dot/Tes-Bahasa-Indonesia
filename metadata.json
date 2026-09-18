@@ -1,0 +1,8 @@
+{
+  "name": "Sumatif Bahasa Indonesia",
+  "description": "Aplikasi Tes Sumatif Bahasa Indonesia Materi Teks Eksplanasi Kelas VI SD Negeri 3 Loloan Timur dengan 40 butir soal (25 PG, 5 PGK, 10 PGK Kategori), ilustrasi gambar visual, sinkronisasi Google Spreadsheet, unduh PDF, serta panel guru.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
