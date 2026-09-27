@@ -12,8 +12,8 @@ import {
   School,
   FileCheck,
   AlertTriangle,
-  HelpCircle,
   Eye,
+  Palette,
 } from 'lucide-react';
 
 interface Stage3ResultProps {
@@ -73,16 +73,16 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
         </span>
 
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Laporan Hasil Tes Sumatif
+          Tahap 3 — Laporan Hasil Tes
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
           {CONFIG.MATA_PELAJARAN} (Materi: {CONFIG.MATERI}) • Kelas {CONFIG.KELAS}
         </p>
 
-        {/* Kotak Nilai Utama */}
+        {/* Kotak Nilai Akhir Utama */}
         <div className="my-8 max-w-sm mx-auto p-6 rounded-2xl bg-slate-50 border border-slate-200">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-            Nilai Akhir Ujian
+            Nilai Akhir Ujian (Skala 0–100)
           </p>
           <div
             className={`text-5xl sm:text-6xl font-black my-2 ${
@@ -93,19 +93,19 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
           </div>
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wide mt-1">
             {isPassed ? (
-              <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span className="bg-emerald-100 text-emerald-800 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" />
                 LULUS (Mencapai KKTP)
               </span>
             ) : (
-              <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span className="bg-amber-100 text-amber-800 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4" />
                 BELUM LULUS (Perlu Remedial)
               </span>
             )}
           </div>
           <p className="text-[11px] text-slate-500 mt-2">
-            Standar Kriteria Ketercapaian Tujuan Pembelajaran (KKTP): <span className="font-bold">{CONFIG.KKTP}</span>
+            Standar Kriteria Ketercapaian Tujuan Pembelajaran (KKTP): <span className="font-bold text-slate-800">{CONFIG.KKTP}</span>
           </p>
         </div>
 
@@ -143,20 +143,20 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
           </div>
         </div>
 
-        {/* Informasi Penyimpanan & Tanda Tangan */}
+        {/* Notifikasi Sinkronisasi Spreadsheet */}
         <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-900 text-xs max-w-2xl mx-auto mb-8 text-left flex items-start gap-3">
           <FileCheck className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-blue-950">
-              Data Anda telah tersinkronisasi ke Google Spreadsheet sekolah.
+              Hasil tes Anda telah otomatis masuk ke dalam Google Spreadsheet sekolah dan Panel Guru.
             </p>
             <p className="mt-0.5 text-blue-800">
-              Anda dapat mengunduh lembar hasil tes resmi dalam bentuk PDF di bawah ini. Lembar ini memuat kolom tanda tangan resmi Guru Kelas VI ({CONFIG.GURU}) dan Orang Tua/Wali Murid.
+              Anda dapat mengunduh lembar hasil tes resmi dalam format PDF yang siap dicetak dan ditandatangani oleh Guru Kelas VI ({CONFIG.GURU}) dan Orang Tua/Wali Murid.
             </p>
           </div>
         </div>
 
-        {/* Tombol Aksi: Download PDF & Tes Baru */}
+        {/* Tombol Aksi: Download PDF & Mulai Tes Baru */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             id="btn-download-result-pdf"
@@ -165,7 +165,7 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>Unduh Lembar Hasil (PDF)</span>
+            <span>Unduh Hasil Tes (PDF)</span>
           </button>
 
           <button
@@ -179,16 +179,16 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
           </button>
         </div>
 
-        {/* Fitur Kunci Jawaban / Pembahasan (Hanya tampil jika diaktifkan guru) */}
+        {/* Fitur Kunci Jawaban / Pembahasan: Jangan tampilkan kunci jawaban kepada siswa kecuali diaktifkan guru */}
         {allowReview && (
           <div className="mt-10 pt-8 border-t border-slate-200 text-left max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Eye className="w-4 h-4 text-blue-600" />
-                <span>Pembahasan & Kunci Jawaban Soal</span>
+                <span>Kunci Jawaban &amp; Pembahasan Soal</span>
               </h4>
               <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                Fitur Pembahasan Diaktifkan Guru
+                Fitur Pembahasan Diaktifkan oleh Guru
               </span>
             </div>
 
@@ -201,10 +201,10 @@ export const Stage3Result: React.FC<Stage3ResultProps> = ({
                   <div className="flex items-center justify-between font-bold text-slate-700">
                     <span>Soal #{idx + 1} ({q.topic})</span>
                     <span className="text-blue-700">
-                      Kunci: {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : q.correctAnswer || 'Sesuai Kategori'}
+                      Kunci: {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : q.correctAnswer || (q.type === 'pgk_kategori' ? 'Sesuai Kategori' : '')}
                     </span>
                   </div>
-                  <p className="text-slate-800">{q.text}</p>
+                  <p className="text-slate-800 font-medium">{q.text}</p>
                   {q.imageSvg && (
                     <div className="my-2 flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl">
                       <div

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Question, OptionItem, StatementItem, Difficulty } from '../types';
-import { X, Save, Edit3, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { X, Save, Edit3 } from 'lucide-react';
 
 interface QuestionEditorModalProps {
   question: Question | null;
@@ -27,9 +27,9 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     question.options ? JSON.parse(JSON.stringify(question.options)) : []
   );
 
-  // State untuk kunci jawaban PG & PGK
+  // State untuk kunci jawaban PG, PGK, & Isian
   const [correctAnswer, setCorrectAnswer] = useState<string | string[]>(
-    question.correctAnswer || (question.type === 'pgk' ? [] : 'A')
+    question.correctAnswer || (question.type === 'pgk' ? [] : question.type === 'isian' ? '' : 'A')
   );
 
   // State untuk statements (PGK Kategori)
@@ -73,9 +73,13 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
       topic: topic.trim(),
       difficulty,
       explanation: explanation.trim(),
-      options: question.type !== 'pgk_kategori' ? options : undefined,
+      options: question.type === 'pg' || question.type === 'pgk' ? options : undefined,
       statements: question.type === 'pgk_kategori' ? statements : undefined,
       correctAnswer: question.type !== 'pgk_kategori' ? correctAnswer : undefined,
+      acceptableAnswers:
+        question.type === 'isian'
+          ? [String(correctAnswer).trim().toLowerCase()]
+          : question.acceptableAnswers,
     };
 
     onSave(updated);
@@ -219,7 +223,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
           {question.type === 'pgk_kategori' && (
             <div className="space-y-3">
               <label className="block text-xs font-bold text-slate-700">
-                3 Deskripsi Pernyataan &amp; Respons Benar / Salah
+                Deskripsi Pernyataan &amp; Respons ({question.categoryLabels?.positive || 'Benar'} / {question.categoryLabels?.negative || 'Salah'})
               </label>
               {statements.map((st, idx) => (
                 <div key={st.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
@@ -235,7 +239,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                           checked={st.correctAnswer === true}
                           onChange={() => handleStatementAnswerChange(idx, true)}
                         />
-                        <span className="text-emerald-700 font-bold">Benar</span>
+                        <span className="text-emerald-700 font-bold">{question.categoryLabels?.positive || 'Benar'}</span>
                       </label>
                       <label className="flex items-center gap-1 text-xs cursor-pointer">
                         <input
@@ -244,7 +248,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                           checked={st.correctAnswer === false}
                           onChange={() => handleStatementAnswerChange(idx, false)}
                         />
-                        <span className="text-rose-700 font-bold">Salah</span>
+                        <span className="text-rose-700 font-bold">{question.categoryLabels?.negative || 'Salah'}</span>
                       </label>
                     </div>
                   </div>
@@ -257,6 +261,23 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                   />
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Kunci Jawaban Isian Singkat */}
+          {question.type === 'isian' && (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Kunci Jawaban Isian Singkat
+              </label>
+              <input
+                type="text"
+                value={typeof correctAnswer === 'string' ? correctAnswer : ''}
+                onChange={(e) => setCorrectAnswer(e.target.value)}
+                placeholder="Contoh: makrame"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
             </div>
           )}
 

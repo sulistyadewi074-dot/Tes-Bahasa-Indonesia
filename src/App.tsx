@@ -1,8 +1,8 @@
 /**
  * Aplikasi Website Tes Sumatif
  * SEKOLAH DASAR - JEMBRANA - KELAS VI
- * Mata Pelajaran: BAHASA INDONESIA
- * Materi: TEKS EKSPLANASI
+ * Mata Pelajaran: SENI RUPA
+ * Materi: IKATAN DAN SIMPUL, MACAM-MACAM SIMPUL
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,7 +16,7 @@ import { Stage3Result } from './components/Stage3Result';
 import { Stage4TeacherPanel } from './components/Stage4TeacherPanel';
 import { TeacherAuthModal } from './components/TeacherAuthModal';
 
-const STORAGE_QUESTIONS_KEY = 'sd3_loloan_timur_questions_b_indo_eksplanasi_v1';
+const STORAGE_QUESTIONS_KEY = 'sd3_loloan_timur_questions_seni_rupa_simpul_v1';
 const STORAGE_ALLOW_REVIEW_KEY = 'sd3_loloan_timur_allow_review';
 
 export default function App() {
@@ -36,7 +36,7 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_QUESTIONS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Pastikan jumlah dan struktur sesuai dengan distribusi 40 butir soal (25 PG, 5 PGK, 10 PGK Kategori)
+        // Pastikan jumlah dan struktur sesuai dengan 35 butir soal (20 PG, 5 PGK, 5 PGK Kategori, 5 Isian)
         if (Array.isArray(parsed) && parsed.length === INITIAL_QUESTIONS.length) {
           return parsed;
         }

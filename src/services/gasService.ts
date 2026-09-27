@@ -437,10 +437,11 @@ export const gasService = {
 export const GAS_SCRIPT_TEMPLATE = `/**
  * SKRIP GOOGLE APPS SCRIPT UNTUK REKAP TES SUMATIF
  * SEKOLAH DASAR - JEMBRANA - KELAS VI
+ * Mata Pelajaran: Seni Rupa (Materi: Ikatan dan Simpul)
  *
  * PANDUAN PEMASANGAN (HANYA 2 MENIT):
  * 1. Buat Spreadsheet baru di https://sheets.new
- * 2. Beri nama: "Rekap Nilai Tes Sumatif Matematika Sekolah Dasar"
+ * 2. Beri nama: "Rekap Nilai Tes Sumatif Seni Rupa Kelas VI"
  * 3. Buka menu "Ekstensi" -> "Apps Script"
  * 4. Hapus semua kode default, lalu salin dan tempel SELURUH KODE di bawah ini
  * 5. Klik "Simpan" (ikon disket)

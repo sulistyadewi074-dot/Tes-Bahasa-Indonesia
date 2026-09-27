@@ -752,7 +752,8 @@ export const Stage4TeacherPanel: React.FC<Stage4TeacherPanelProps> = ({
               <p className="text-xs text-slate-500">
                 {questions.filter((q) => q.type === 'pg').length} Soal Pilihan Ganda,{' '}
                 {questions.filter((q) => q.type === 'pgk').length} Soal Pilihan Ganda Kompleks,{' '}
-                {questions.filter((q) => q.type === 'pgk_kategori').length} Soal PGK Kategori
+                {questions.filter((q) => q.type === 'pgk_kategori').length} Soal PGK Kategori,{' '}
+                {questions.filter((q) => q.type === 'isian').length} Soal Isian Singkat
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -800,6 +801,7 @@ export const Stage4TeacherPanel: React.FC<Stage4TeacherPanelProps> = ({
                       {q.type === 'pg' && 'Pilihan Ganda'}
                       {q.type === 'pgk' && 'Pilihan Ganda Kompleks'}
                       {q.type === 'pgk_kategori' && 'PGK Kategori'}
+                      {q.type === 'isian' && 'Isian Singkat'}
                     </span>
                     <span className="text-xs font-medium text-slate-600">{q.topic}</span>
                   </div>
@@ -890,6 +892,18 @@ export const Stage4TeacherPanel: React.FC<Stage4TeacherPanelProps> = ({
                         </span>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {q.type === 'isian' && (
+                  <div className="p-2.5 rounded-lg bg-indigo-50 border border-indigo-200 text-xs text-indigo-900">
+                    <span className="font-bold">Kunci Jawaban Isian: </span>
+                    <span className="font-mono font-bold text-indigo-800">{String(q.correctAnswer)}</span>
+                    {q.acceptableAnswers && q.acceptableAnswers.length > 1 && (
+                      <span className="text-[11px] text-indigo-600 block mt-0.5">
+                        Variasi yang diterima: {q.acceptableAnswers.join(', ')}
+                      </span>
+                    )}
                   </div>
                 )}
 

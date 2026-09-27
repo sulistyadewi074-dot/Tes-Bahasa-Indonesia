@@ -8,14 +8,14 @@ export const CONFIG = {
   ALAMAT_SEKOLAH: "Loloan Timur, Kec. Negara, Kab. Jembrana, Bali",
   KOTA: "Jembrana",
   KELAS: "VI",
-  MATA_PELAJARAN: "Bahasa Indonesia",
-  MATERI: "Teks Eksplanasi",
+  MATA_PELAJARAN: "Seni Rupa",
+  MATERI: "Ikatan dan Simpul, Macam-Macam Simpul",
   GURU: "Ni Putu Leni Sulistya Dewi, S.Pd",
   NIP_GURU: "198901102022212002",
   LABEL_NIP_GURU: "NIPPPK",
   KEPALA_SEKOLAH: "Susilo Fitri Yatmoko, M.Pd",
   NIP_KEPALA_SEKOLAH: "19880521 201101 1 010",
-  KKTP: 75,
+  KKTP: 60,
   ADMIN_PASSWORD: "GURUADMIN",
   
   // Endpoint Google Apps Script Web App utama

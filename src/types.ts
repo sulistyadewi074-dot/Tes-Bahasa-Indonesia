@@ -2,19 +2,19 @@
  * Definisi Type & Interface Aplikasi Tes Sumatif
  */
 
-export type QuestionType = 'pg' | 'pgk' | 'pgk_kategori';
+export type QuestionType = 'pg' | 'pgk' | 'pgk_kategori' | 'isian';
 export type Difficulty = 'Mudah' | 'Sedang' | 'Sukar';
 
 export interface StudentBirthDate {
-  hari: string;
-  bulan: string;
-  tahun: string;
+  hari?: string;
+  bulan?: string;
+  tahun?: string;
 }
 
 export interface StudentIdentity {
   nama: string;
   noAbsen: string;
-  tglLahir: StudentBirthDate;
+  tglLahir?: StudentBirthDate;
 }
 
 export interface OptionItem {
@@ -25,17 +25,22 @@ export interface OptionItem {
 export interface StatementItem {
   id: string; // e.g. 's1', 's2', 's3'
   text: string;
-  correctAnswer: boolean; // true = Benar, false = Salah
+  correctAnswer: boolean; // true = Benar/Sesuai/Setuju, false = Salah/Tidak Sesuai/Tidak Setuju
 }
 
 export interface Question {
   id: number;
   type: QuestionType;
   text: string;
-  imageSvg?: string; // Format SVG visual untuk representasi pecahan
-  options?: OptionItem[]; // Untuk 'pg' (4 opsi) dan 'pgk' (3 opsi)
-  statements?: StatementItem[]; // Untuk 'pgk_kategori' (3 pernyataan)
-  correctAnswer?: string | string[]; // string untuk 'pg' (e.g. 'B'), array untuk 'pgk' (e.g. ['A', 'C'])
+  imageSvg?: string; // Format SVG visual ilustrasi simpul & ikatan
+  options?: OptionItem[]; // Untuk 'pg' (4 opsi) dan 'pgk' (3 atau 4 opsi)
+  statements?: StatementItem[]; // Untuk 'pgk_kategori' (pernyataan)
+  categoryLabels?: {
+    positive: string; // Misal: 'Benar', 'Setuju', atau 'Sesuai'
+    negative: string; // Misal: 'Salah', 'Tidak Setuju', atau 'Tidak Sesuai'
+  };
+  correctAnswer?: string | string[]; // string untuk 'pg' & 'isian', array string untuk 'pgk'
+  acceptableAnswers?: string[]; // Variasi jawaban benar untuk soal isian singkat
   difficulty: Difficulty;
   explanation: string;
   topic: string;

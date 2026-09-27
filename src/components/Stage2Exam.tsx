@@ -20,10 +20,8 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Clock,
   User,
   Check,
-  RefreshCw,
 } from 'lucide-react';
 
 interface Stage2ExamProps {
@@ -47,28 +45,26 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
   questions,
   onFinishExam,
 }) => {
-  // 1. Acak urutan soal dan opsi jawaban saat tes dimulai
+  // 1. Acak urutan soal dan pilihan jawaban setiap kali tes dimulai
   const shuffledQuestions = useMemo<ShuffledQuestion[]>(() => {
     // Acak urutan soal
     const shuffledQ: Question[] = shuffleArray<Question>(questions);
 
     return shuffledQ.map((q: Question) => {
-      if (q.type === 'pg' || q.type === 'pgk') {
-        if (q.options && q.options.length > 0) {
-          // Acak opsi jawaban tetapi beri label baru A, B, C, D yang rapi
-          const shuffledOpts: OptionItem[] = shuffleArray<OptionItem>(q.options);
-          const standardLabels = ['A', 'B', 'C', 'D'];
-          const remappedOptions: OptionItem[] = shuffledOpts.map((opt, idx) => ({
-            id: standardLabels[idx] || opt.id,
-            text: opt.text,
-          }));
+      if ((q.type === 'pg' || q.type === 'pgk') && q.options && q.options.length > 0) {
+        // Acak opsi jawaban dan beri penamaan A, B, C, D yang rapi
+        const shuffledOpts: OptionItem[] = shuffleArray<OptionItem>(q.options);
+        const standardLabels = ['A', 'B', 'C', 'D'];
+        const remappedOptions: OptionItem[] = shuffledOpts.map((opt, idx) => ({
+          id: standardLabels[idx] || opt.id,
+          text: opt.text,
+        }));
 
-          return {
-            ...q,
-            originalQuestionId: q.id,
-            shuffledOptions: remappedOptions,
-          };
-        }
+        return {
+          ...q,
+          originalQuestionId: q.id,
+          shuffledOptions: remappedOptions,
+        };
       }
       return {
         ...q,
@@ -79,7 +75,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
 
   // State pengerjaan
   const [currentIndex, setCurrentIndex] = useState(0);
-  // Answers state keyed by question index (0 to 21)
+  // Answers state keyed by question index (0 to 34)
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   // Konfirmasi kirim modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -93,11 +89,11 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
   // Cek apakah soal nomor tertentu sudah dijawab
   const isQuestionAnswered = (idx: number): boolean => {
     const ans = answers[idx];
-    if (!ans) return false;
+    if (ans === undefined || ans === null) return false;
 
     const q = shuffledQuestions[idx];
     if (q.type === 'pg') {
-      return typeof ans === 'string' && ans.length > 0;
+      return typeof ans === 'string' && ans.trim().length > 0;
     }
     if (q.type === 'pgk') {
       return Array.isArray(ans) && ans.length > 0;
@@ -105,9 +101,12 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
     if (q.type === 'pgk_kategori') {
       if (typeof ans === 'object' && !Array.isArray(ans)) {
         const statements = q.statements || [];
-        return statements.every((st) => ans[st.id] !== undefined);
+        return statements.length > 0 && statements.every((st) => ans[st.id] !== undefined);
       }
       return false;
+    }
+    if (q.type === 'isian') {
+      return typeof ans === 'string' && ans.trim().length > 0;
     }
     return false;
   };
@@ -150,7 +149,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
     });
   };
 
-  // Handler jawaban PGK Kategori (Benar / Salah)
+  // Handler jawaban PGK Kategori (Benar/Salah, Sesuai/Tidak Sesuai, Setuju/Tidak Setuju)
   const handleSetCategoryStatement = (statementId: string, value: boolean) => {
     setAnswers((prev) => {
       const currentMap =
@@ -163,6 +162,14 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
         [currentIndex]: currentMap,
       };
     });
+  };
+
+  // Handler jawaban Isian Singkat
+  const handleSetIsian = (val: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [currentIndex]: val,
+    }));
   };
 
   // Navigasi soal
@@ -185,14 +192,12 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
       const origQ = questions.find((q) => q.id === sq.originalQuestionId) || sq;
 
       if (sq.type === 'pg') {
-        // Cocokkan teks opsi yang dipilih dengan teks opsi dari kunci jawaban original
         const correctOpt = origQ.options?.find((o) => o.id === origQ.correctAnswer);
         if (correctOpt && userAns === correctOpt.text) {
           totalScore += 1;
           benarCount += 1;
         }
       } else if (sq.type === 'pgk') {
-        // Jawaban benar bisa lebih dari satu
         const correctKeys = Array.isArray(origQ.correctAnswer) ? origQ.correctAnswer : [];
         const correctTexts = (origQ.options || [])
           .filter((o) => correctKeys.includes(o.id))
@@ -208,7 +213,6 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
           benarCount += 1;
         }
       } else if (sq.type === 'pgk_kategori') {
-        // 3 pernyataan Benar/Salah
         const statements = origQ.statements || [];
         const userMap = (typeof userAns === 'object' && !Array.isArray(userAns) ? userAns : {}) as Record<string, boolean>;
 
@@ -219,12 +223,21 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
           }
         });
 
-        if (statementsCorrect === statements.length) {
+        if (statements.length > 0 && statementsCorrect === statements.length) {
           totalScore += 1;
           benarCount += 1;
-        } else {
-          // Memberi bobot proporsional untuk nilai akhir
+        } else if (statements.length > 0) {
           totalScore += statementsCorrect / statements.length;
+        }
+      } else if (sq.type === 'isian') {
+        const userText = typeof userAns === 'string' ? userAns.trim().toLowerCase() : '';
+        const acceptable = (origQ.acceptableAnswers || [String(origQ.correctAnswer || '')]).map((a) =>
+          a.trim().toLowerCase()
+        );
+
+        if (userText && acceptable.includes(userText)) {
+          totalScore += 1;
+          benarCount += 1;
         }
       }
     });
@@ -234,17 +247,12 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
     const salahCount = totalQuestions - benarCount;
     const status: 'Lulus' | 'Belum Lulus' = finalScore >= CONFIG.KKTP ? 'Lulus' : 'Belum Lulus';
 
-    const tglLahirStr = student.tglLahir
-      ? `${student.tglLahir.hari} ${student.tglLahir.bulan} ${student.tglLahir.tahun}`
-      : '-';
-
     return {
       id: `res-${Date.now()}`,
       timestamp: new Date().toLocaleString('id-ID'),
       nama: student.nama,
       noAbsen: student.noAbsen,
       kelas: CONFIG.KELAS,
-      tglLahir: tglLahirStr,
       benar: benarCount,
       salah: salahCount,
       nilai: finalScore,
@@ -255,7 +263,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
 
   // Proses Kirim Jawaban ke Google Apps Script
   const handleConfirmSubmit = async () => {
-    // Validasi ulang semua soal terjawab
+    // Validasi ulang: siswa tidak dapat mengirim tes sebelum seluruh soal dijawab
     if (!allAnswered) {
       alert('Masih ada butir soal yang belum dijawab. Harap jawab seluruh soal terlebih dahulu!');
       setShowConfirmModal(false);
@@ -268,9 +276,8 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
     const calculatedResult = calculateResult();
 
     try {
-      // Kirim data ke Google Apps Script
+      // Kirim data ke Google Apps Script / Spreadsheet
       await gasService.submitExamResult(calculatedResult);
-      // Hanya tampilkan berhasil / pindah halaman setelah server merespons sukses!
       setIsSubmitting(false);
       setShowConfirmModal(false);
       onFinishExam(calculatedResult);
@@ -325,7 +332,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar & Indikator */}
         <div className="mt-4 pt-4 border-t border-slate-100">
           <div className="flex justify-between items-center text-xs font-semibold mb-1.5">
             <span className="text-slate-600">
@@ -357,7 +364,8 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
                     {currentQ.type === 'pg' && 'Pilihan Ganda'}
                     {currentQ.type === 'pgk' && 'Pilihan Ganda Kompleks'}
-                    {currentQ.type === 'pgk_kategori' && 'PGK Kategori (Benar / Salah)'}
+                    {currentQ.type === 'pgk_kategori' && 'PGK Kategori'}
+                    {currentQ.type === 'isian' && 'Isian Singkat'}
                   </span>
                 </div>
                 <span className="text-xs font-medium text-slate-500">
@@ -368,8 +376,10 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
               {/* Petunjuk Pengisian Berdasarkan Tipe */}
               <div className="mb-4 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-100 inline-block">
                 {currentQ.type === 'pg' && 'Pilihlah salah satu jawaban yang paling tepat.'}
-                {currentQ.type === 'pgk' && 'Pilihlah seluruh pernyataan yang bernilai benar (bisa lebih dari satu).'}
-                {currentQ.type === 'pgk_kategori' && 'Tentukan pilihan Benar atau Salah untuk setiap pernyataan di bawah ini.'}
+                {currentQ.type === 'pgk' && 'Pilihlah seluruh pilihan jawaban yang benar (bisa lebih dari satu).'}
+                {currentQ.type === 'pgk_kategori' &&
+                  `Tentukan pilihan ${currentQ.categoryLabels?.positive || 'Benar'} atau ${currentQ.categoryLabels?.negative || 'Salah'} untuk setiap pernyataan di bawah ini.`}
+                {currentQ.type === 'isian' && 'Ketikkan jawaban singkat dan tepat pada kolom yang disediakan.'}
               </div>
 
               {/* Teks Soal */}
@@ -377,7 +387,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                 {currentQ.text}
               </div>
 
-              {/* Tampilan Gambar / Ilustrasi Soal Jika Ada */}
+              {/* Tampilan Gambar / Ilustrasi Simpul Jika Ada */}
               {currentQ.imageSvg && (
                 <div className="mb-6 flex flex-col items-center justify-center p-4 bg-slate-50/90 border border-slate-200 rounded-2xl">
                   <div
@@ -385,12 +395,12 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                     dangerouslySetInnerHTML={{ __html: currentQ.imageSvg }}
                   />
                   <span className="text-[11px] text-slate-500 mt-2 font-medium">
-                    Ilustrasi Visual / Diagram Teks Eksplanasi
+                    Ilustrasi Visual Simpul &amp; Ikatan
                   </span>
                 </div>
               )}
 
-              {/* Tampilan Opsi Jawaban: Pilihan Ganda (PG) */}
+              {/* Tampilan Opsi: Pilihan Ganda (PG) */}
               {currentQ.type === 'pg' && (
                 <div className="space-y-2.5">
                   {currentOptions.map((opt) => {
@@ -424,7 +434,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                 </div>
               )}
 
-              {/* Tampilan Opsi Jawaban: Pilihan Ganda Kompleks (PGK) */}
+              {/* Tampilan Opsi: Pilihan Ganda Kompleks (PGK) */}
               {currentQ.type === 'pgk' && (
                 <div className="space-y-2.5">
                   {currentOptions.map((opt) => {
@@ -462,7 +472,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                 </div>
               )}
 
-              {/* Tampilan Opsi Jawaban: PGK Kategori (Benar / Salah) */}
+              {/* Tampilan Opsi: PGK Kategori (Benar/Salah, Sesuai/Tidak, Setuju/Tidak) */}
               {currentQ.type === 'pgk_kategori' && (
                 <div className="space-y-3">
                   {(currentQ.statements || []).map((st, sIdx) => {
@@ -471,6 +481,8 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                         ? (answers[currentIndex] as Record<string, boolean>)
                         : {};
                     const currentVal = ansMap[st.id];
+                    const posLabel = currentQ.categoryLabels?.positive || 'Benar';
+                    const negLabel = currentQ.categoryLabels?.negative || 'Salah';
 
                     return (
                       <div
@@ -487,31 +499,52 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                           <button
                             type="button"
                             onClick={() => handleSetCategoryStatement(st.id, true)}
-                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer ${
+                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer uppercase ${
                               currentVal === true
                                 ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
                                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>BENAR</span>
+                            <span>{posLabel}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleSetCategoryStatement(st.id, false)}
-                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer ${
+                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border cursor-pointer uppercase ${
                               currentVal === false
                                 ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
                                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            <span>SALAH</span>
+                            <span>{negLabel}</span>
                           </button>
                         </div>
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Tampilan Isian Singkat */}
+              {currentQ.type === 'isian' && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+                    <label className="block text-xs font-bold text-slate-700 mb-2">
+                      Ketikkan Jawaban Anda di Bawah Ini:
+                    </label>
+                    <input
+                      type="text"
+                      value={typeof answers[currentIndex] === 'string' ? (answers[currentIndex] as string) : ''}
+                      onChange={(e) => handleSetIsian(e.target.value)}
+                      placeholder="Tulis jawaban singkat di sini..."
+                      className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900"
+                    />
+                    <p className="mt-1.5 text-[11px] text-slate-400">
+                      Jawaban tidak membedakan huruf besar atau kecil (misal: "makrame" atau "Makrame").
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -559,11 +592,11 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
           <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
               <span>Nomor Soal Ujian</span>
-              <span className="text-[11px] font-normal text-slate-500">22 Butir</span>
+              <span className="text-[11px] font-normal text-slate-500">{totalQuestions} Butir</span>
             </h4>
 
-            {/* Grid 22 Soal */}
-            <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 mb-4">
+            {/* Grid 35 Soal */}
+            <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-5 gap-2 mb-4">
               {shuffledQuestions.map((_, i) => {
                 const isCurrent = currentIndex === i;
                 const isAnswered = isQuestionAnswered(i);
@@ -605,7 +638,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
               </div>
             </div>
 
-            {/* Tombol Kirim Utama */}
+            {/* Tombol Selesai / Kirim Jawaban Sidebar */}
             <div className="mt-5 pt-4 border-t border-slate-100">
               <button
                 id="btn-sidebar-submit"
@@ -655,14 +688,14 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
               <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs mb-5">
                 <p className="font-bold mb-1">Peringatan: Belum Semua Soal Dijawab!</p>
                 <p>
-                  Anda baru menjawab <span className="font-bold">{answeredCount}</span> dari {totalQuestions} butir soal. Sesuai ketentuan, Anda tidak dapat mengirim tes sebelum seluruh soal terjawab.
+                  Anda baru menjawab <span className="font-bold">{answeredCount}</span> dari {totalQuestions} butir soal. Sesuai ketentuan, siswa tidak dapat mengirim tes sebelum seluruh soal dijawab.
                 </p>
               </div>
             ) : (
               <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs mb-5 space-y-1">
-                <p className="font-bold">Apakah Anda yakin ingin mengirim jawaban?</p>
+                <p className="font-bold text-sm">Apakah Anda yakin ingin mengirim jawaban?</p>
                 <p>
-                  Setelah dikirim, nilai akan dihitung dan tersimpan secara permanen ke rekap Google Spreadsheet sekolah.
+                  Setelah dikirim, nilai akhir Anda akan langsung dihitung dan otomatis tersimpan ke rekap Google Spreadsheet sekolah.
                 </p>
               </div>
             )}
@@ -688,7 +721,7 @@ export const Stage2Exam: React.FC<Stage2ExamProps> = ({
                 }}
                 className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
               >
-                Batal / Kembali ke Soal
+                Batal / Periksa Kembali
               </button>
 
               {allAnswered && (
